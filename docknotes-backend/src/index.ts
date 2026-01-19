@@ -13,6 +13,7 @@ app.get("/", (req : Request, res : Response) => {
 
 interface Note {
     id : string,
+    title : string,
     color : string,
     content : string,
     date : Date,
@@ -22,6 +23,7 @@ interface Note {
 const notes : Note[] = [
     {
         id : "1",
+        title : "Javascript",
         color : "red",
         content : "Apprendre JAVASCRIPT",
         date : new Date("2026-01-19"),
@@ -29,6 +31,7 @@ const notes : Note[] = [
     },
     {
         id : "2",
+        title : "Backend",
         color : "blue",
         content : "Créer un serveur backend",
         date : new Date("2026-01-14"),
@@ -37,8 +40,29 @@ const notes : Note[] = [
 ];
 
 app.get("/notes", (req : Request, res : Response) => {
+    const {title} = req.query;
+
+    if(title && typeof title === "string"){
+        const filterNotes = notes.filter((n) => n.content.toLowerCase().includes(title.toLowerCase()));
+        res.json(filterNotes);
+        return;
+    }
     res.json(notes);
 });
+
+app.get("/notes/:id", (req : Request, res : Response) => {
+    const { id } = req.params;
+    const note = notes.find((n) => n.id === id);
+
+    if(!note){
+        res.status(404).json(
+            {
+                message : "Note not found"
+            }
+        )
+    }
+    res.json(note);
+})
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
