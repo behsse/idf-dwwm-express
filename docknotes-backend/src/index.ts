@@ -62,7 +62,7 @@ const notes : Note[] = [
         content : "Créer un serveur backend",
         date : new Date("2026-01-14"),
         isFavorite : false
-    }
+    },
 ];
 
 // Route pour récupérer toutes les notes, avec possibilité de filtrer par contenu
@@ -119,6 +119,161 @@ app.get("/notes/:id", (req : Request, res : Response) => {
     }
     // Si on l'a trouvée, on l'envoie !
     res.json(note);
+})
+
+// Route pour CRÉER une nouvelle note
+// app.post() crée une route qui répond aux requêtes HTTP POST
+// POST est utilisé pour créer de nouvelles ressources (C de CRUD = Create)
+app.post("/notes", (req : Request, res : Response) => {
+    // On récupère les données envoyées par le client dans le body de la requête
+    // req.body contient les données JSON envoyées (grâce au middleware express.json())
+    // La déstructuration extrait directement les propriétés qu'on veut
+    const {title, color, content, isFavorite} = req.body;
+
+    // Validation : on vérifie que les champs obligatoires sont présents
+    // Si title ou content manque, on renvoie une erreur 400 (Bad Request)
+    // C'est important de valider les données avant de les utiliser !
+    if(!title || !content){
+        res.status(400).json({
+            message : "Les champs title et content sont obligatoires"
+        });
+        return  // On arrête l'exécution ici
+    };
+
+    // On crée la nouvelle note avec toutes ses propriétés
+    const newNote : Note = {
+        id : String(notes.length + 1),  // On génère un nouvel id (longueur du tableau + 1)
+        title,                           // Raccourci ES6 : équivalent à title: title
+        color : color || "red",          // Si color n'est pas fourni, on met "red" par défaut (opérateur ||)
+        content,
+        date : new Date(),               // On met la date actuelle
+        isFavorite : isFavorite || false // Si pas fourni, false par défaut
+    };
+
+    // On ajoute la nouvelle note à notre tableau
+    // push() ajoute un élément à la fin du tableau
+    notes.push(newNote);
+
+    // On renvoie la note créée avec le status 201 (Created)
+    // 201 = la ressource a été créée avec succès
+    res.status(201).json(newNote);
+});
+
+// Route pour REMPLACER ENTIÈREMENT une note existante
+// app.put() crée une route qui répond aux requêtes HTTP PUT
+// PUT remplace TOUTE la ressource (U de CRUD = Update complet)
+// Différent de PATCH qui ne modifie que certains champs
+app.put("/notes/:id", (req : Request, res : Response) => {
+    // On récupère l'id depuis l'URL et les nouvelles données depuis le body
+    const {id} = req.params;
+    const {title, color, content, isFavorite} = req.body;
+
+    // On cherche l'INDEX de la note dans le tableau (pas la note elle-même)
+    // findIndex() retourne la position (0, 1, 2...) ou -1 si non trouvé
+    // Différent de find() qui retourne l'élément lui-même
+    const noteIndex = notes.findIndex((n) => n.id === id);
+
+    // Si la note n'existe pas (index = -1), on renvoie 404
+    if (noteIndex === -1){
+        res.status(404).json({
+            message : "Note not found"
+        })
+        return
+    }
+
+    // Pour PUT, TOUS les champs sont obligatoires (remplacement complet)
+    // On valide que title, content ET color sont présents
+    if(!title || !content || !color){
+        res.status(400).json({
+            message : "Les champs title et content sont obligatoires"
+        });
+        return
+    };
+
+    // On crée la note mise à jour
+    // On garde l'id et la date d'origine (ils ne changent pas)
+    const updateNote : Note = {
+        id : notes[noteIndex].id,           // On garde l'id original
+        title,
+        color,
+        content,
+        date : notes[noteIndex].date,       // On garde la date de création originale
+        isFavorite : isFavorite ?? false    // ?? = nullish coalescing : utilise false si isFavorite est null ou undefined
+    };
+
+    // On remplace l'ancienne note par la nouvelle dans le tableau
+    // notes[noteIndex] accède à l'élément à la position noteIndex
+    notes[noteIndex] = updateNote;
+
+    // On renvoie la note mise à jour (status 200 par défaut)
+    res.json(updateNote);
+
+});
+
+// Route pour MODIFIER PARTIELLEMENT une note existante
+// app.patch() crée une route qui répond aux requêtes HTTP PATCH
+// PATCH ne modifie que les champs envoyés (mise à jour partielle)
+// Différent de PUT qui remplace TOUT l'objet
+app.patch("/notes/:id", (req : Request, res : Response) => {
+    const {id} = req.params;
+    const {title, color, content, isFavorite} = req.body;
+
+    // On cherche l'index de la note
+    const noteIndex = notes.findIndex((n) => n.id === id);
+
+    // Si non trouvé, erreur 404
+    if(noteIndex === -1){
+        return res.status(404).json({
+            message : "Note not found"
+        });
+    }
+
+    // On crée la note mise à jour en utilisant le spread operator (...)
+    // C'est une technique avancée mais très pratique !
+    const updateNote : Note = {
+        ...notes[noteIndex],                              // On copie TOUTES les propriétés de la note existante
+        ...(title && {title}),                            // Si title existe, on l'ajoute/remplace
+        ...(color && {color}),                            // Si color existe, on l'ajoute/remplace
+        ...(content && {content}),                        // Si content existe, on l'ajoute/remplace
+        ...(isFavorite !== undefined && {isFavorite})     // Pour isFavorite, on vérifie !== undefined car false est une valeur valide
+    };
+    // Explication du spread conditionnel :
+    // ...(condition && {prop}) = si la condition est vraie, on "spread" l'objet {prop}
+    // Si condition est fausse, on spread "false" ce qui n'ajoute rien
+    // Ça permet de ne modifier QUE les champs envoyés par le client
+
+    notes[noteIndex] = updateNote;
+    res.json(updateNote);
+});
+
+// Route pour SUPPRIMER une note
+// app.delete() crée une route qui répond aux requêtes HTTP DELETE
+// DELETE supprime une ressource (D de CRUD = Delete)
+app.delete("/notes/:id", (req : Request, res : Response) => {
+    const {id} = req.params;
+
+    // On cherche l'index de la note à supprimer
+    const noteIndex = notes.findIndex((n) => n.id === id);
+
+    // Si non trouvé, erreur 404
+    if(noteIndex === -1){
+        return res.status(404).json({
+            message : "Note not found"
+        });
+    }
+
+    // On supprime la note du tableau
+    // splice(index, nombreASupprimer) modifie le tableau en place
+    // splice(noteIndex, 1) = à partir de noteIndex, supprimer 1 élément
+    notes.splice(noteIndex, 1);
+
+    // On renvoie le status 204 (No Content)
+    // 204 = succès mais pas de contenu à renvoyer
+    // Note : avec 204, le body est ignoré par le navigateur (même si on en envoie un)
+    res.status(204).json("Note supprimé avec succès")
+
+    // Alternative plus correcte pour 204 :
+    // res.status(204).send()  // send() sans argument pour ne rien envoyer
 })
 
 // On démarre le serveur ! C'est comme allumer la lumière de notre boutique
