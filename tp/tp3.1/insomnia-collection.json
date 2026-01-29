@@ -1,0 +1,778 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-01-29T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_tp_librairie",
+      "parentId": null,
+      "_type": "workspace",
+      "name": "TP Librairie API",
+      "description": "Collection Insomnia pour le TP 3.1 - API Librairie",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_tp_librairie",
+      "_type": "environment",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000"
+      }
+    },
+    {
+      "_id": "fld_books",
+      "parentId": "wrk_tp_librairie",
+      "_type": "request_group",
+      "name": "Books"
+    },
+    {
+      "_id": "fld_books_get",
+      "parentId": "fld_books",
+      "_type": "request_group",
+      "name": "GET"
+    },
+    {
+      "_id": "fld_books_post",
+      "parentId": "fld_books",
+      "_type": "request_group",
+      "name": "POST"
+    },
+    {
+      "_id": "fld_books_put",
+      "parentId": "fld_books",
+      "_type": "request_group",
+      "name": "PUT"
+    },
+    {
+      "_id": "fld_books_patch",
+      "parentId": "fld_books",
+      "_type": "request_group",
+      "name": "PATCH"
+    },
+    {
+      "_id": "fld_books_delete",
+      "parentId": "fld_books",
+      "_type": "request_group",
+      "name": "DELETE"
+    },
+    {
+      "_id": "fld_authors",
+      "parentId": "wrk_tp_librairie",
+      "_type": "request_group",
+      "name": "Authors"
+    },
+    {
+      "_id": "fld_authors_get",
+      "parentId": "fld_authors",
+      "_type": "request_group",
+      "name": "GET"
+    },
+    {
+      "_id": "fld_authors_post",
+      "parentId": "fld_authors",
+      "_type": "request_group",
+      "name": "POST"
+    },
+    {
+      "_id": "fld_authors_put",
+      "parentId": "fld_authors",
+      "_type": "request_group",
+      "name": "PUT"
+    },
+    {
+      "_id": "fld_authors_patch",
+      "parentId": "fld_authors",
+      "_type": "request_group",
+      "name": "PATCH"
+    },
+    {
+      "_id": "fld_authors_delete",
+      "parentId": "fld_authors",
+      "_type": "request_group",
+      "name": "DELETE"
+    },
+    {
+      "_id": "fld_categories",
+      "parentId": "wrk_tp_librairie",
+      "_type": "request_group",
+      "name": "Categories"
+    },
+    {
+      "_id": "fld_categories_get",
+      "parentId": "fld_categories",
+      "_type": "request_group",
+      "name": "GET"
+    },
+    {
+      "_id": "fld_categories_post",
+      "parentId": "fld_categories",
+      "_type": "request_group",
+      "name": "POST"
+    },
+    {
+      "_id": "fld_categories_put",
+      "parentId": "fld_categories",
+      "_type": "request_group",
+      "name": "PUT"
+    },
+    {
+      "_id": "fld_categories_delete",
+      "parentId": "fld_categories",
+      "_type": "request_group",
+      "name": "DELETE"
+    },
+    {
+      "_id": "fld_general",
+      "parentId": "wrk_tp_librairie",
+      "_type": "request_group",
+      "name": "General"
+    },
+
+    {
+      "_id": "req_welcome",
+      "parentId": "fld_general",
+      "_type": "request",
+      "name": "3.1 - Bienvenue",
+      "method": "GET",
+      "url": "{{ _.base_url }}/",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_status",
+      "parentId": "fld_general",
+      "_type": "request",
+      "name": "3.2 - Statut API",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/status",
+      "body": {},
+      "headers": []
+    },
+
+    {
+      "_id": "req_get_all_books",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.3 - Get All Books",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_count",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.6 - Count Books",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/count",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_first",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.7 - First Book",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/first",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_last",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.7 - Last Book",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/last",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_available",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.8 - Books Available",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/available",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_classics",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.9 - Books Classics (avant 2000)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/classics",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_top_rated",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.10 - Books Top Rated",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/top-rated",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_genres",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.11 - Books Genres (unique)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/genres",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_stats",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "3.12 - Books Stats",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/stats",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_book_by_id",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "4.1 - Get Book by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/1",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_book_by_id_404",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "4.1 - Get Book by ID (404)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/999",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_by_genre",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "4.4 - Books by Genre",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/genre/roman",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_by_year",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "4.5 - Books by Year",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/year/1949",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_book_title",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "4.6 - Book Title by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/1/title",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_book_price",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "4.7 - Book Price by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/1/price",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_book_check_title",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "4.9 - Check Title Exists",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/check/Le Petit Prince",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_price_range",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "4.10 - Books Price Range (10-20)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/price/10/20",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_search_title",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "5.1 - Search by Title",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/search?title=petit",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_search_author",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "5.2 - Search by Author",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/search?author=hugo",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_search_combined",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "5.3 - Search Combined",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books/search?title=le&genre=roman",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_pagination",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "5.4 - Pagination (page 1, limit 5)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books?page=1&limit=5",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_sort_price",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "5.5 - Sort by Price ASC",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books?sortBy=price&order=asc",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_sort_rating_desc",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "5.5 - Sort by Rating DESC",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books?sortBy=rating&order=desc",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_filter_instock",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "5.6 - Filter inStock=true",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books?inStock=true",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_books_filter_outstock",
+      "parentId": "fld_books_get",
+      "_type": "request",
+      "name": "5.6 - Filter inStock=false",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books?inStock=false",
+      "body": {},
+      "headers": []
+    },
+
+    {
+      "_id": "req_create_book",
+      "parentId": "fld_books_post",
+      "_type": "request",
+      "name": "6.1 - Create Book",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/books",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"title\": \"1984\",\n  \"author\": \"George Orwell\",\n  \"year\": 1949,\n  \"genre\": \"Dystopie\",\n  \"price\": 9.99,\n  \"inStock\": true,\n  \"rating\": 4.7\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_create_book_invalid",
+      "parentId": "fld_books_post",
+      "_type": "request",
+      "name": "6.2 - Create Book (invalid - 400)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/books",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"title\": \"Livre sans auteur ni prix\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_create_books_batch",
+      "parentId": "fld_books_post",
+      "_type": "request",
+      "name": "6.5 - Create Books Batch",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/books/batch",
+      "body": {
+        "mimeType": "application/json",
+        "text": "[\n  { \"title\": \"Livre Batch 1\", \"author\": \"Auteur 1\", \"price\": 10 },\n  { \"title\": \"Livre Batch 2\", \"author\": \"Auteur 2\", \"price\": 15 }\n]"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_duplicate_book",
+      "parentId": "fld_books_post",
+      "_type": "request",
+      "name": "6.6 - Duplicate Book (ID 1)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/books/1/duplicate",
+      "body": {},
+      "headers": []
+    },
+
+    {
+      "_id": "req_replace_book",
+      "parentId": "fld_books_put",
+      "_type": "request",
+      "name": "7.1 - Replace Book (ID 1)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/books/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"title\": \"Le Petit Prince (Edition revisee)\",\n  \"author\": \"Antoine de Saint-Exupery\",\n  \"year\": 1943,\n  \"genre\": \"Conte\",\n  \"price\": 10.99,\n  \"inStock\": true,\n  \"rating\": 5.0\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_patch_book",
+      "parentId": "fld_books_patch",
+      "_type": "request",
+      "name": "8.1 - Patch Book (ID 1, price only)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/books/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"price\": 19.99\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_toggle_stock",
+      "parentId": "fld_books_patch",
+      "_type": "request",
+      "name": "8.3 - Toggle Stock (ID 1)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/books/1/toggle-stock",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_discount",
+      "parentId": "fld_books_patch",
+      "_type": "request",
+      "name": "8.4 - Discount 20% (ID 1)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/books/1/discount",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"percentage\": 20\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_update_rating",
+      "parentId": "fld_books_patch",
+      "_type": "request",
+      "name": "8.5 - Update Rating (ID 1)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/books/1/rating",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"rating\": 4.5\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_clear_stock",
+      "parentId": "fld_books_patch",
+      "_type": "request",
+      "name": "8.6 - Clear All Stock",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/books/clear-stock",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_increase_prices",
+      "parentId": "fld_books_patch",
+      "_type": "request",
+      "name": "8.7 - Increase All Prices 10%",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/books/increase-prices",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"percentage\": 10\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_delete_book",
+      "parentId": "fld_books_delete",
+      "_type": "request",
+      "name": "9.1 - Delete Book (ID 1)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/books/1",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_delete_out_of_stock",
+      "parentId": "fld_books_delete",
+      "_type": "request",
+      "name": "9.4 - Delete Out of Stock",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/books/out-of-stock",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_delete_before_year",
+      "parentId": "fld_books_delete",
+      "_type": "request",
+      "name": "9.5 - Delete Before 1950",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/books/before/1950",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_delete_batch",
+      "parentId": "fld_books_delete",
+      "_type": "request",
+      "name": "9.6 - Delete Batch",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/books/batch",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"ids\": [1, 3, 5]\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_get_all_authors",
+      "parentId": "fld_authors_get",
+      "_type": "request",
+      "name": "3.4 - Get All Authors",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/authors",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_authors_alive",
+      "parentId": "fld_authors_get",
+      "_type": "request",
+      "name": "3.13 - Authors Alive",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/authors/alive",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_authors_nationalities",
+      "parentId": "fld_authors_get",
+      "_type": "request",
+      "name": "3.14 - Authors Nationalities",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/authors/nationalities",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_author_by_id",
+      "parentId": "fld_authors_get",
+      "_type": "request",
+      "name": "4.2 - Get Author by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/authors/1",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_authors_by_nationality",
+      "parentId": "fld_authors_get",
+      "_type": "request",
+      "name": "4.8 - Authors by Nationality",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/authors/nationality/francaise",
+      "body": {},
+      "headers": []
+    },
+
+    {
+      "_id": "req_create_author",
+      "parentId": "fld_authors_post",
+      "_type": "request",
+      "name": "6.3 - Create Author",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/authors",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"firstName\": \"Jules\",\n  \"lastName\": \"Verne\",\n  \"nationality\": \"Francaise\",\n  \"birthYear\": 1828,\n  \"isAlive\": false\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_replace_author",
+      "parentId": "fld_authors_put",
+      "_type": "request",
+      "name": "7.2 - Replace Author (ID 1)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/authors/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"firstName\": \"Victor\",\n  \"lastName\": \"Hugo\",\n  \"nationality\": \"Francaise\",\n  \"birthYear\": 1802,\n  \"isAlive\": false\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_patch_author",
+      "parentId": "fld_authors_patch",
+      "_type": "request",
+      "name": "8.2 - Patch Author (ID 3)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/authors/3",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nationality\": \"Britannique-Americaine\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_delete_author",
+      "parentId": "fld_authors_delete",
+      "_type": "request",
+      "name": "9.2 - Delete Author (ID 1)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/authors/1",
+      "body": {},
+      "headers": []
+    },
+
+    {
+      "_id": "req_get_all_categories",
+      "parentId": "fld_categories_get",
+      "_type": "request",
+      "name": "3.5 - Get All Categories",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/categories",
+      "body": {},
+      "headers": []
+    },
+    {
+      "_id": "req_category_by_id",
+      "parentId": "fld_categories_get",
+      "_type": "request",
+      "name": "4.3 - Get Category by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/categories/1",
+      "body": {},
+      "headers": []
+    },
+
+    {
+      "_id": "req_create_category",
+      "parentId": "fld_categories_post",
+      "_type": "request",
+      "name": "6.4 - Create Category",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/categories",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Dystopie\",\n  \"description\": \"Societes imaginaires sombres et oppressives\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_replace_category",
+      "parentId": "fld_categories_put",
+      "_type": "request",
+      "name": "7.3 - Replace Category (ID 1)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/categories/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Roman Classique\",\n  \"description\": \"Grands romans de la litterature\",\n  \"bookCount\": 5\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_delete_category",
+      "parentId": "fld_categories_delete",
+      "_type": "request",
+      "name": "9.3 - Delete Category (ID 1)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/categories/1",
+      "body": {},
+      "headers": []
+    }
+  ]
+}

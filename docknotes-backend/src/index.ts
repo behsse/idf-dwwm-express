@@ -3,6 +3,17 @@
 // Request = les infos de la demande du client, Response = ce qu'on lui renvoie
 import express, {Request, Response} from 'express';
 
+// On importe notre connexion à la base de données MySQL (configurée dans config/database.ts)
+// Ce "db" est un pool de connexions qui nous permet d'exécuter des requêtes SQL
+import db from '@/config/database';
+
+// On importe ResultSetHeader de mysql2 - c'est le type TypeScript pour les résultats
+// des requêtes INSERT, UPDATE, DELETE (qui ne retournent pas de lignes mais des métadonnées)
+// Il contient des infos comme affectedRows (nombre de lignes modifiées) et insertId (id créé)
+import { ResultSetHeader } from 'mysql2';
+
+import categoriesRouter from "@/routes/categories.route"
+
 // On crée notre application (notre petit serveur web)
 // express() retourne une instance d'application Express qu'on stocke dans "app"
 const app = express();
@@ -18,8 +29,8 @@ const port = 3000;
 app.use(express.json());
 
 // ========== LES ROUTES (les chemins pour accéder aux différentes pages) ==========
-// Une route = une URL + une méthode HTTP (GET, POST, PUT, DELETE)
-// app.get() crée une route qui répond aux requêtes HTTP GET
+// Une route = une URL + une méthode HTTP (GET, POST, PUT, DELETE, PATCH)
+// Ces 5 méthodes correspondent au CRUD : Create (POST), Read (GET), Update (PUT/PATCH), Delete (DELETE)
 
 // Route d'accueil : quand on va sur la racine du site "/"
 // C'est la page principale, comme la porte d'entrée d'une maison
@@ -31,11 +42,13 @@ app.get("/", (req : Request, res : Response) => {
     });
 });
 
+app.use("/categories", categoriesRouter);
+
 // Ceci est une "interface" - c'est comme une fiche d'identité pour une note
 // Elle dit quelles informations chaque note doit avoir obligatoirement
-// Ici l'interface est définie dans le même fichier (on pourrait la mettre dans un fichier séparé)
+// TypeScript utilise les interfaces pour vérifier la forme des objets à la compilation
 interface Note {
-    id : string,          // Un identifiant unique pour reconnaître chaque note (ici c'est une string, pas un number)
+    id : string,          // Un identifiant unique pour reconnaître chaque note
     title : string,       // Le titre de la note (par exemple "Javascript")
     color : string,       // La couleur de la note pour l'affichage (ex: "red", "blue")
     content : string,     // Le contenu de la note (ce qu'on a écrit dedans)
@@ -43,244 +56,277 @@ interface Note {
     isFavorite : boolean  // Est-ce qu'on aime cette note ? true = oui, false = non
 };
 
-// Ici on crée une liste de notes - c'est comme un carnet de notes
-// On déclare un tableau typé Note[] - TypeScript vérifie que chaque objet respecte l'interface
-// En vrai projet, ces données viendraient d'une base de données (MySQL, MongoDB, etc.)
-const notes : Note[] = [
-    {
-        id : "1",
-        title : "Javascript",
-        color : "red",
-        content : "Apprendre JAVASCRIPT",
-        date : new Date("2026-01-19"),  // new Date() crée un objet Date à partir d'une string
-        isFavorite : true
-    },
-    {
-        id : "2",
-        title : "Backend",
-        color : "blue",
-        content : "Créer un serveur backend",
-        date : new Date("2026-01-14"),
-        isFavorite : false
-    },
-];
-
-// Route pour récupérer toutes les notes, avec possibilité de filtrer par contenu
-// Exemple : /notes renvoie toutes les notes
-// Exemple : /notes?title=javascript renvoie les notes contenant "javascript" dans leur contenu
-// Cette route utilise des query parameters (?clé=valeur) pour le filtrage optionnel
-app.get("/notes", (req : Request, res : Response) => {
-    // On récupère ce qu'on cherche (le titre/contenu)
+// ========== GET /notes - Récupérer toutes les notes ==========
+// Toutes les données viennent de la base MySQL (plus de tableau en dur)
+// Si un query parameter "title" est fourni, on filtre en base avec LIKE
+// Sinon, on récupère toutes les notes
+// Exemple : /notes → toutes les notes | /notes?title=javascript → filtre par contenu
+app.get("/notes", async (req : Request, res : Response) => {
+    // On récupère le paramètre de recherche depuis l'URL
     // req.query contient les paramètres après le ? dans l'URL
     // Ex: /notes?title=backend → req.query = { title: "backend" }
     const {title} = req.query;
 
-    // Si on a donné un titre à chercher...
+    // Si un titre est fourni, on filtre directement en base de données
     // On vérifie que title existe ET que c'est une string (TypeScript safety)
-    // car req.query peut contenir des types variés (string, string[], undefined)
-    if(title && typeof title === "string"){
-        // On filtre les notes pour garder seulement celles qui contiennent le mot cherché
-        // filter() crée un nouveau tableau avec les éléments qui passent le test
-        // includes() vérifie si une string contient une sous-chaîne
-        // toLowerCase() met tout en minuscules pour une recherche case-insensitive
-        // Note : on cherche dans "content" et non dans "title" malgré le nom du paramètre
-        const filterNotes = notes.filter((n) => n.content.toLowerCase().includes(title.toLowerCase()));
-        res.json(filterNotes);
-        return; // return arrête l'exécution pour ne pas continuer après
+    if (title && typeof title === "string") {
+      // LIKE ? avec %${title}% cherche le mot n'importe où dans le contenu (% = wildcard)
+      // Ex: "%backend%" trouvera "Créer un serveur backend" ou "Le backend avec Node"
+      const [data] = await db.query(
+        "SELECT * FROM notes WHERE content LIKE ?",
+        [`%${title}%`]
+      );
+      res.json(data);
+      return; // return arrête l'exécution pour ne pas continuer après
     }
-    // Si on n'a rien cherché, on renvoie toutes les notes
-    res.json(notes);
+    // Si pas de filtre, on interroge la base de données MySQL
+    // db.query() retourne un tableau : [les données, les métadonnées des colonnes]
+    // On déstructure avec [data] pour récupérer uniquement les données (premier élément)
+    // "await" attend que la requête SQL soit terminée avant de continuer (asynchrone)
+    const [data] = await db.query("SELECT * FROM notes");
+    res.json(data)
 });
 
-// Route pour récupérer UNE note par son identifiant
-// Exemple : /notes/1 nous donnera la note avec l'id "1"
+// ========== GET /notes/:id - Récupérer UNE note par son identifiant ==========
 // :id est un paramètre d'URL dynamique (route parameter)
-app.get("/notes/:id", (req : Request, res : Response) => {
-    // On récupère l'id depuis l'adresse
-    // req.params contient tous les paramètres d'URL (ici { id: "valeur" })
-    // La déstructuration { id } extrait directement la propriété id
-    const { id } = req.params;
+// Exemple : /notes/1 → récupère la note avec l'id 1
+// Exemple : /notes/42 → récupère la note avec l'id 42
+app.get("/notes/:id", async (req : Request, res : Response) => {
+    // try/catch permet de gérer les erreurs - si quelque chose plante dans le try,
+    // on tombe dans le catch au lieu de crasher tout le serveur
+    try {
+        // req.params contient les paramètres dynamiques de l'URL
+        // Pour /notes/5, req.params = { id: "5" }
+        const {id} = req.params
 
-    // On cherche la note qui a cet id dans notre liste
-    // find() retourne le PREMIER élément qui satisfait la condition, ou undefined
-    // Différent de filter() qui retourne un tableau de TOUS les éléments correspondants
-    // Ici on compare directement les strings (pas besoin de Number() car id est une string)
-    const note = notes.find((n) => n.id === id);
+        // On exécute une requête SQL avec un paramètre préparé (le ?)
+        // Le ? est remplacé par la valeur de [id] - ça protège contre les injections SQL
+        // L'injection SQL est une attaque où un pirate envoie du code SQL malveillant
+        const [data] = await db.query("SELECT * FROM notes WHERE id = ?", [id]);
 
-    // Si on ne trouve pas la note, on dit qu'elle n'existe pas (erreur 404)
-    // 404 Not Found = la ressource demandée n'existe pas
-    // C'est le code HTTP standard pour "pas trouvé"
-    if(!note){
-        res.status(404).json(
-            {
-                message : "Note not found"
-            }
-        )
+        // On cast (convertit) le résultat en tableau de Note[] car mysql2 retourne un type générique
+        // TypeScript a besoin de savoir le type exact pour nous aider avec l'autocomplétion
+        const notes = data as Note[];
+
+        // Si le tableau est vide, la note n'existe pas → erreur 404 (Not Found)
+        if(notes.length === 0){
+            return res.status(404).json({message : "Note not found"});
+        }
+
+        // On renvoie la première (et seule) note trouvée
+        // notes[0] car même avec WHERE id = ?, le résultat est toujours un tableau
+        res.json(notes[0]);
+    } catch (error) {
+        // En cas d'erreur (ex: base de données inaccessible), on renvoie une erreur 500
+        // 500 = Internal Server Error (problème côté serveur, pas côté client)
+        res.status(500).json({message : "Error server", error});
     }
-    // Si on l'a trouvée, on l'envoie !
-    res.json(note);
 })
 
-// Route pour CRÉER une nouvelle note
+// ========== POST /notes - Créer une nouvelle note ==========
 // app.post() crée une route qui répond aux requêtes HTTP POST
 // POST est utilisé pour créer de nouvelles ressources (C de CRUD = Create)
-app.post("/notes", (req : Request, res : Response) => {
+app.post("/notes", async (req : Request, res : Response) => {
     // On récupère les données envoyées par le client dans le body de la requête
     // req.body contient les données JSON envoyées (grâce au middleware express.json())
     // La déstructuration extrait directement les propriétés qu'on veut
-    const {title, color, content, isFavorite} = req.body;
+    const {title, color, content, isFavorite, category_id} = req.body;
 
     // Validation : on vérifie que les champs obligatoires sont présents
-    // Si title ou content manque, on renvoie une erreur 400 (Bad Request)
-    // C'est important de valider les données avant de les utiliser !
+    // Si title ou content manque, on renvoie une erreur 400 (Bad Request = mauvaise demande)
+    // C'est important de valider les données avant de les insérer en base !
     if(!title || !content){
-        res.status(400).json({
+        return res.status(400).json({
             message : "Les champs title et content sont obligatoires"
         });
-        return  // On arrête l'exécution ici
     };
 
-    // On crée la nouvelle note avec toutes ses propriétés
-    const newNote : Note = {
-        id : String(notes.length + 1),  // On génère un nouvel id (longueur du tableau + 1)
-        title,                           // Raccourci ES6 : équivalent à title: title
-        color : color || "red",          // Si color n'est pas fourni, on met "red" par défaut (opérateur ||)
+    // On insère la nouvelle note en base de données avec une requête SQL INSERT
+    // Les ? sont des paramètres préparés, remplacés dans l'ordre par les valeurs du tableau
+    // ResultSetHeader nous donne accès à insertId (l'id auto-généré par MySQL)
+    // || fournit une valeur par défaut : si color est vide/null/undefined, on met "red"
+    const [data] = await db.query<ResultSetHeader>("INSERT INTO notes (title, color, content, date, isFavorite, category_id) VALUES (?, ?, ?, ?, ?, ?)", [
+        title,
+        color || "red",
         content,
-        date : new Date(),               // On met la date actuelle
-        isFavorite : isFavorite || false // Si pas fourni, false par défaut
+        new Date(),          // La date actuelle au moment de la création
+        isFavorite || false,   // Par défaut, la note n'est pas en favori
+        category_id || null
+    ]);
+
+    // On construit l'objet de la note créée pour le renvoyer au client
+    // data.insertId contient l'id auto-incrémenté généré par MySQL lors de l'INSERT
+    // On renvoie cet objet pour que le client connaisse l'id et les valeurs par défaut utilisées
+    const newNote = {
+        id : data.insertId,
+        title,
+        color : color || "red",
+        content,
+        date : new Date(),
+        isFavorite : isFavorite || false
     };
 
-    // On ajoute la nouvelle note à notre tableau
-    // push() ajoute un élément à la fin du tableau
-    notes.push(newNote);
-
-    // On renvoie la note créée avec le status 201 (Created)
-    // 201 = la ressource a été créée avec succès
-    res.status(201).json(newNote);
+    res.json(newNote);
 });
 
-// Route pour REMPLACER ENTIÈREMENT une note existante
+// ========== PUT /notes/:id - Remplacer entièrement une note ==========
 // app.put() crée une route qui répond aux requêtes HTTP PUT
 // PUT remplace TOUTE la ressource (U de CRUD = Update complet)
-// Différent de PATCH qui ne modifie que certains champs
-app.put("/notes/:id", (req : Request, res : Response) => {
+// Différence avec PATCH : PUT exige TOUS les champs, PATCH accepte seulement ceux à modifier
+app.put("/notes/:id", async (req : Request, res : Response) => {
     // On récupère l'id depuis l'URL et les nouvelles données depuis le body
     const {id} = req.params;
-    const {title, color, content, isFavorite} = req.body;
+    const {title, color, content, isFavorite, category_id} = req.body;
 
-    // On cherche l'INDEX de la note dans le tableau (pas la note elle-même)
-    // findIndex() retourne la position (0, 1, 2...) ou -1 si non trouvé
-    // Différent de find() qui retourne l'élément lui-même
-    const noteIndex = notes.findIndex((n) => n.id === id);
-
-    // Si la note n'existe pas (index = -1), on renvoie 404
-    if (noteIndex === -1){
-        res.status(404).json({
-            message : "Note not found"
-        })
-        return
-    }
-
-    // Pour PUT, TOUS les champs sont obligatoires (remplacement complet)
+    // Pour PUT, TOUS les champs sont obligatoires car on remplace toute la note
     // On valide que title, content ET color sont présents
     if(!title || !content || !color){
-        res.status(400).json({
+        return res.status(400).json({
             message : "Les champs title et content sont obligatoires"
         });
-        return
     };
 
-    // On crée la note mise à jour
-    // On garde l'id et la date d'origine (ils ne changent pas)
-    const updateNote : Note = {
-        id : notes[noteIndex].id,           // On garde l'id original
+    // On met à jour TOUS les champs de la note en base de données
+    // La requête SQL UPDATE SET modifie les colonnes spécifiées WHERE id = ?
+    // ?? est l'opérateur "nullish coalescing" : utilise la valeur de droite seulement si
+    // la gauche est null ou undefined (contrairement à || qui réagit aussi à false, 0, "")
+    // Ici c'est important car isFavorite peut valoir false (qui est une valeur valide)
+    const [data] = await db.query<ResultSetHeader>("UPDATE notes SET title = ?, color = ?, content = ?, isFavorite = ?, category_id = ? WHERE id = ?", [
         title,
         color,
         content,
-        date : notes[noteIndex].date,       // On garde la date de création originale
-        isFavorite : isFavorite ?? false    // ?? = nullish coalescing : utilise false si isFavorite est null ou undefined
-    };
+        isFavorite ?? false,
+        category_id || null,
+        id
+    ]);
 
-    // On remplace l'ancienne note par la nouvelle dans le tableau
-    // notes[noteIndex] accède à l'élément à la position noteIndex
-    notes[noteIndex] = updateNote;
-
-    // On renvoie la note mise à jour (status 200 par défaut)
-    res.json(updateNote);
+    // Après la mise à jour, on récupère la note modifiée depuis la base pour la renvoyer
+    // Cela garantit que le client reçoit les données telles qu'elles sont en base
+    const [result] = await db.query("SELECT * FROM notes WHERE id = ?", [id])
+    res.json(result);
 
 });
 
-// Route pour MODIFIER PARTIELLEMENT une note existante
+// ========== PATCH /notes/:id - Modifier partiellement une note ==========
 // app.patch() crée une route qui répond aux requêtes HTTP PATCH
 // PATCH ne modifie que les champs envoyés (mise à jour partielle)
-// Différent de PUT qui remplace TOUT l'objet
-app.patch("/notes/:id", (req : Request, res : Response) => {
-    const {id} = req.params;
-    const {title, color, content, isFavorite} = req.body;
+// Exemple : envoyer { "color": "green" } ne changera que la couleur, pas le reste
+app.patch("/notes/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { title, color, content, isFavorite, category_id } = req.body;
 
-    // On cherche l'index de la note
-    const noteIndex = notes.findIndex((n) => n.id === id);
+    // On construit la requête SQL dynamiquement selon les champs envoyés
+    // updates contiendra les morceaux SQL comme ["title = ?", "color = ?"]
+    // values contiendra les valeurs correspondantes dans le même ordre
+    const updates: string[] = [];
+    const values: (string | boolean | number | null)[] = [];
 
-    // Si non trouvé, erreur 404
-    if(noteIndex === -1){
-        return res.status(404).json({
-            message : "Note not found"
-        });
+    // Pour chaque champ, on vérifie s'il a été envoyé dans la requête (!== undefined)
+    // On utilise !== undefined plutôt que if(title) pour accepter les valeurs falsy
+    // comme une string vide "" ou false, qui sont des valeurs valides à mettre à jour
+    if (title !== undefined) {
+      updates.push("title = ?");
+      values.push(title);
+    }
+    if (color !== undefined) {
+      updates.push("color = ?");
+      values.push(color);
+    }
+    if (content !== undefined) {
+      updates.push("content = ?");
+      values.push(content);
+    }
+    if (isFavorite !== undefined) {
+      updates.push("isFavorite = ?");
+      values.push(isFavorite);
+    }
+    if (category_id !== undefined){
+        updates.push("category_id = ?");
+        values.push(category_id);
     }
 
-    // On crée la note mise à jour en utilisant le spread operator (...)
-    // C'est une technique avancée mais très pratique !
-    const updateNote : Note = {
-        ...notes[noteIndex],                              // On copie TOUTES les propriétés de la note existante
-        ...(title && {title}),                            // Si title existe, on l'ajoute/remplace
-        ...(color && {color}),                            // Si color existe, on l'ajoute/remplace
-        ...(content && {content}),                        // Si content existe, on l'ajoute/remplace
-        ...(isFavorite !== undefined && {isFavorite})     // Pour isFavorite, on vérifie !== undefined car false est une valeur valide
-    };
-    // Explication du spread conditionnel :
-    // ...(condition && {prop}) = si la condition est vraie, on "spread" l'objet {prop}
-    // Si condition est fausse, on spread "false" ce qui n'ajoute rien
-    // Ça permet de ne modifier QUE les champs envoyés par le client
+    // Si aucun champ n'a été envoyé, on renvoie une erreur 400
+    // Pas besoin de faire une requête SQL si on n'a rien à modifier
+    if (updates.length === 0) {
+      res.status(400).json({ message: "Aucun champ à modifier" });
+      return;
+    }
 
-    notes[noteIndex] = updateNote;
-    res.json(updateNote);
+    // On ajoute l'id à la fin du tableau values (il correspond au WHERE id = ?)
+    // Number(id) convertit la string de l'URL en nombre pour MySQL
+    values.push(Number(id));
+
+    // On assemble la requête SQL en joignant les morceaux avec des virgules
+    // Ex: updates = ["title = ?", "color = ?"] → "UPDATE notes SET title = ?, color = ? WHERE id = ?"
+    // join(", ") transforme le tableau en string avec ", " entre chaque élément
+    const [result] = await db.query<ResultSetHeader>(
+      `UPDATE notes SET ${updates.join(", ")} WHERE id = ?`,
+      values
+    );
+
+    // affectedRows indique combien de lignes ont été modifiées par la requête
+    // Si 0 lignes affectées, c'est que l'id n'existe pas en base → erreur 404
+    if (result.affectedRows === 0) {
+      res.status(404).json({ message: "Note not found" });
+      return;
+    }
+
+    // On récupère la note mise à jour pour la renvoyer au client
+    // Le cast "as Note[]" indique à TypeScript le type du résultat
+    // [0] récupère le premier (et seul) élément du tableau
+    const [data] = await db.query("SELECT * FROM notes WHERE id = ?", [id]);
+    res.json((data as Note[])[0]);
+  } catch (error) {
+    // En cas d'erreur serveur, on renvoie un status 500 avec le détail de l'erreur
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
 });
 
-// Route pour SUPPRIMER une note
+// ========== DELETE /notes/:id - Supprimer une note ==========
 // app.delete() crée une route qui répond aux requêtes HTTP DELETE
 // DELETE supprime une ressource (D de CRUD = Delete)
-app.delete("/notes/:id", (req : Request, res : Response) => {
-    const {id} = req.params;
+app.delete("/notes/:id", async (req : Request, res : Response) => {
+    try{
+        const {id} = req.params;
 
-    // On cherche l'index de la note à supprimer
-    const noteIndex = notes.findIndex((n) => n.id === id);
+        // On exécute une requête SQL DELETE pour supprimer la note avec l'id donné
+        // Comme pour les autres requêtes, le ? protège contre les injections SQL
+        const [data] = await db.query<ResultSetHeader>("DELETE FROM notes WHERE id = ?", [id]);
 
-    // Si non trouvé, erreur 404
-    if(noteIndex === -1){
-        return res.status(404).json({
-            message : "Note not found"
-        });
+        // Si aucune ligne n'a été supprimée, la note n'existait pas → erreur 404
+        if(data.affectedRows === 0){
+            return res.status(404).json({
+                message : "Note not found"
+            });
+        };
+
+        // On renvoie le status 204 (No Content) - succès mais pas de contenu à renvoyer
+        // 204 est le code standard pour une suppression réussie
+        // Note : avec 204, le body est ignoré par le navigateur (même si on en envoie un)
+        res.status(204).json("Note supprimé avec succès");
+    } catch(error){
+        res.status(500).json({message : "Error server", error});
     }
-
-    // On supprime la note du tableau
-    // splice(index, nombreASupprimer) modifie le tableau en place
-    // splice(noteIndex, 1) = à partir de noteIndex, supprimer 1 élément
-    notes.splice(noteIndex, 1);
-
-    // On renvoie le status 204 (No Content)
-    // 204 = succès mais pas de contenu à renvoyer
-    // Note : avec 204, le body est ignoré par le navigateur (même si on en envoie un)
-    res.status(204).json("Note supprimé avec succès")
-
-    // Alternative plus correcte pour 204 :
-    // res.status(204).send()  // send() sans argument pour ne rien envoyer
 })
 
+// ========== DÉMARRAGE DU SERVEUR ==========
 // On démarre le serveur ! C'est comme allumer la lumière de notre boutique
-// À partir de maintenant, les gens peuvent visiter notre site
 // app.listen() démarre le serveur HTTP et écoute sur le port spécifié
-// Le callback est exécuté une fois que le serveur est prêt à recevoir des requêtes
-// Template literal `${}` permet d'insérer des variables dans une string
-app.listen(port, () => {
+// Le callback (la fonction fléchée) est exécuté une fois que le serveur est prêt
+app.listen(port, async () => {
+    // Template literal `${}` permet d'insérer des variables dans une string
     console.log(`Server is running on port ${port}`);
+
+    // On teste la connexion à la base de données au démarrage
+    // "SELECT 1" est une requête SQL minimale qui vérifie juste que MySQL répond
+    // Si ça fonctionne, on sait que la base est accessible et prête
+    try{
+        await db.query("SELECT 1");
+        console.log("Database connected successfully");
+    } catch(error){
+        // Si la connexion échoue, on affiche l'erreur mais le serveur continue de tourner
+        // Les routes qui utilisent la base ne fonctionneront pas, mais la route "/" si
+        console.log("Database connection failed:", error)
+    }
 });
