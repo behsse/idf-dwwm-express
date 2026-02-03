@@ -322,8 +322,7 @@ app.listen(port, async () => {
     // "SELECT 1" est une requête SQL minimale qui vérifie juste que MySQL répond
     // Si ça fonctionne, on sait que la base est accessible et prête
     try{
-        await db.query("SELECT 1");
-        console.log("Database connected successfully");
+        
     } catch(error){
         // Si la connexion échoue, on affiche l'erreur mais le serveur continue de tourner
         // Les routes qui utilisent la base ne fonctionneront pas, mais la route "/" si
