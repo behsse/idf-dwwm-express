@@ -1,6 +1,5 @@
 import express, { Request, Response } from "express";
-import db from "@/config/database";
-import { ResultSetHeader } from "mysql2";
+import db from "@/lib/db";
 import { Category } from "@/interfaces/categories.interface";
 
 const router: express.Router = express.Router();
@@ -10,7 +9,7 @@ const router: express.Router = express.Router();
 // ============================================
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const [data] = await db.query("SELECT * FROM categories");
+    const data = await db.category.findMany();
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur", error });
@@ -23,15 +22,13 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const [data] = await db.query("SELECT * FROM categories WHERE id = ?", [id]);
-    const categories = data as Category[];
+    const data = await db.category.findUnique({where : {id: Number(id)}})
 
-    if (categories.length === 0) {
-      res.status(404).json({ message: "Category not found" });
-      return;
+    if (!data) {
+      return res.status(404).json({ message: "Category not found" });
     }
 
-    res.json(categories[0]);
+    res.json(data);
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur", error });
   }
@@ -49,16 +46,12 @@ router.post("/", async (req: Request, res: Response) => {
       return;
     }
 
-    const [result] = await db.query<ResultSetHeader>(
-      "INSERT INTO categories (name, description) VALUES (?, ?)",
-      [name, description || null]
-    );
-
-    const newCategory = {
-      id: result.insertId,
-      name,
-      description: description || null,
-    };
+    const newCategory = await db.category.create({
+      data :  {
+        name,
+        description : description || null
+      }
+    });
 
     res.status(201).json(newCategory);
   } catch (error) {
@@ -79,18 +72,14 @@ router.put("/:id", async (req: Request, res: Response) => {
       return;
     }
 
-    const [result] = await db.query<ResultSetHeader>(
-      "UPDATE categories SET name = ?, description = ? WHERE id = ?",
-      [name, description || null, id]
-    );
-
-    if (result.affectedRows === 0) {
-      res.status(404).json({ message: "Category not found" });
-      return;
-    }
-
-    const [data] = await db.query("SELECT * FROM categories WHERE id = ?", [id]);
-    res.json((data as Category[])[0]);
+    const category = await db.category.update({
+      where: {id : Number(id)},
+      data : {
+        name,
+        description : description || null
+      }
+    });
+    res.json(category);
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur", error });
   }
@@ -103,38 +92,27 @@ router.patch("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name, description } = req.body;
-
-    const updates: string[] = [];
-    const values: (string | number)[] = [];
+    
+    const data : {name? : string; description? : string} = {}
 
     if (name !== undefined) {
-      updates.push("name = ?");
-      values.push(name);
+      data.name = name
     }
     if (description !== undefined) {
-      updates.push("description = ?");
-      values.push(description);
+      data.description = description
     }
 
-    if (updates.length === 0) {
+    if (Object.keys(data).length === 0) {
       res.status(400).json({ message: "Aucun champ à modifier" });
       return;
     }
 
-    values.push(Number(id));
+    const category = await db.category.update({
+      where: {id : Number(id)},
+      data
+    })
 
-    const [result] = await db.query<ResultSetHeader>(
-      `UPDATE categories SET ${updates.join(", ")} WHERE id = ?`,
-      values
-    );
-
-    if (result.affectedRows === 0) {
-      res.status(404).json({ message: "Category not found" });
-      return;
-    }
-
-    const [data] = await db.query("SELECT * FROM categories WHERE id = ?", [id]);
-    res.json((data as Category[])[0]);
+    res.json(category);
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur", error });
   }
@@ -147,17 +125,11 @@ router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query<ResultSetHeader>(
-      "DELETE FROM categories WHERE id = ?",
-      [id]
-    );
+    const data = await db.category.delete({
+      where: {id : Number(id)}
+    })
 
-    if (result.affectedRows === 0) {
-      res.status(404).json({ message: "Category not found" });
-      return;
-    }
-
-    res.status(204).send();
+    res.status(204).json(data);
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur", error });
   }
